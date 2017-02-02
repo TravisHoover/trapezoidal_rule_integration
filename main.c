@@ -18,7 +18,6 @@
 float width;                      /* the width of a segment */
 float rsum = 0.0;                 /* the trapezoidal result */
 pthread_mutex_t mutex1;           /* mutual exclusion variable for simpsons */
-float heightSum = 0;
 
 /*Calculate one segment of the area using the trapezoidal rule*/
 void *trapezoidal(void *mine) {
@@ -26,19 +25,16 @@ void *trapezoidal(void *mine) {
     int me = *((int *)mine);      /* which segment is mine */
     float heightRight;		      /* height of right side of trapezoid */
     float heightLeft;             /* height of the left side of trapezoid */
-    float mid;		              /* midpoint of my segment */
-
-    mid = me * width;
+    float start = me * width;		  /* midpoint of my segment */
 
     /* calculate the right-side height of the curve at each x value */
-    heightRight = sqrt(4.0 - (mid + width) * (mid + width));
+    heightRight = sqrt(4.0 - (start + width) * (start + width));
 
     /* calculate the left-side height of the curve at each x value */
-    heightLeft = sqrt(4.0 - mid * mid);
+    heightLeft = sqrt(4.0 - start * start);
 
     /* calculate the area in my segment */
     partial_sum = (heightRight + heightLeft) * width / 2;
-    heightSum += (heightLeft + heightRight);
 
     /* increment the global area */
     pthread_mutex_lock(&mutex1);
@@ -50,7 +46,7 @@ void *trapezoidal(void *mine) {
 
 int main()
 {
-    int no_processes;            /* number of threads/segments */
+    int num_processes;            /* number of threads/segments */
     int i;                       /* loop variable */
     int is[50];                  /* array for designating segment numbers */
     pthread_t threadr[50];       /* thread id array */
@@ -60,20 +56,20 @@ int main()
 
     /* determine the number of partitions...which is the number of threads */
     printf("input the number of partitions\n");
-    scanf("%d",&no_processes);
+    scanf("%d",&num_processes);
 
     /* the width is the same for each segment so make it global */
-    width = 2.0/no_processes;
+    width = 2.0/num_processes;
 
     /* create threads */
-    for(i=0;i<no_processes;i++) {
+    for(i=0;i<num_processes;i++) {
         is[i]=i;
         if(pthread_create(&threadr[i],NULL,trapezoidal,(void *)&is[i]) != 0)
             perror("Pthread_create fails");
     }
 
     /* wait for all threads */
-    for(i=0;i<no_processes; i++) {
+    for(i=0;i<num_processes; i++) {
         if (pthread_join(threadr[i], NULL) != 0)
             perror("Pthread_join fails");
     }
