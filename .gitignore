@@ -54,4 +54,3 @@ dkms.conf
 
 .gitignore
 a.out
-cmake-build-debug/
