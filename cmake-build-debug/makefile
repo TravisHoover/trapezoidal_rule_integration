@@ -1,10 +1,25 @@
-all : main
+TARGET = prog
+LIBS = -lm
+CC = gcc
+CFLAGS = -g -Wall
 
-main : main.o
-	gcc -o main main.o
+.PHONY: default all clean
 
-main.o : main.c
-	gcc -c main.c
+default: $(TARGET)
+all: default
 
-clean :
-	rm main *.o
+OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
+HEADERS = $(wildcard *.h)
+
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PRECIOUS: $(TARGET) $(OBJECTS)
+
+$(TARGET): $(OBJECTS)
+	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
+
+clean:
+	-rm -f *.o
+	-rm -f $(TARGET)
+
